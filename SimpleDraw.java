@@ -203,8 +203,6 @@ class MyCanvas extends JPanel implements MouseListener, MouseMotionListener {
 	}
 	public void flipSelection() {
 		if(selectedStrokes.size() > 0) {
-			ArrayList< Stroke > newSelectedStrokes = new ArrayList< Stroke >();
-
 			// We try to find a global bounding box
 			AlignedRectangle2D globalBoundingBox = new AlignedRectangle2D();
 			for( Stroke s : selectedStrokes ) {
@@ -215,8 +213,6 @@ class MyCanvas extends JPanel implements MouseListener, MouseMotionListener {
 			for( Stroke s : selectedStrokes ) {
 				s.flip( globalBoundingBox );
 			}
-
-			// We then change the list of selected strokes
 		}
 	}
 	public void paintComponent( Graphics g ) {
