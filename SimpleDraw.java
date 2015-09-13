@@ -1,13 +1,11 @@
 
 import java.util.ArrayList;
-
 import java.awt.Container;
 import java.awt.Component;
 import java.awt.Graphics;
 // import java.awt.Graphics2D;
 import java.awt.Color;
 import java.awt.Dimension;
-
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseEvent;
@@ -108,6 +106,18 @@ class Stroke {
 	//Sets a new color for the stroke
 	public void setColor( Color color) {
 		this.color = color;
+	}
+	
+	//return the minimum distance between a given point and a stroke
+	public double getDistance( Point2D m ) {
+		double minDist = Double.MAX_VALUE;
+		for ( Point2D p : points ) {
+			double res = Math.sqrt( Math.pow( m.x() - p.x(), 2 ) + Math.pow( m.y() - p.y(), 2 ) );
+			if( res < minDist ) {
+				minDist = res;
+			}
+		}
+		return minDist;
 	}
 }
 
@@ -338,14 +348,32 @@ class MyCanvas extends JPanel implements MouseListener, MouseMotionListener {
 				break;
 			case SimpleDraw.MODE_RECT_SELECT :
 				// complete a rectangle selection
-				AlignedRectangle2D selectedRectangle = new AlignedRectangle2D(
-					gw.convertPixelsToWorldSpaceUnits( new Point2D( drag_start_x, drag_start_y ) ),
-					gw.convertPixelsToWorldSpaceUnits( new Point2D( mouse_x, mouse_y ) )
-				);
-				selectedStrokes.clear();
-				for ( Stroke s : drawing.strokes ) {
-					if ( s.isContainedInRectangle( selectedRectangle ) )
-						selectedStrokes.add( s );
+				if (drag_start_x != mouse_x && drag_start_y != mouse_y) {
+					AlignedRectangle2D selectedRectangle = new AlignedRectangle2D(
+						gw.convertPixelsToWorldSpaceUnits( new Point2D( drag_start_x, drag_start_y ) ),
+						gw.convertPixelsToWorldSpaceUnits( new Point2D( mouse_x, mouse_y ) )
+					);
+					selectedStrokes.clear();
+					for ( Stroke s : drawing.strokes ) {
+						if ( s.isContainedInRectangle( selectedRectangle ) )
+							selectedStrokes.add( s );
+					}
+				}
+				// closer stroke
+				else {
+					selectedStrokes.clear();
+					Stroke closerStroke = null;
+					double minDistance = Double.MAX_VALUE;
+					for ( Stroke s : drawing.strokes ) {
+						double dist = s.getDistance(gw.convertPixelsToWorldSpaceUnits( new Point2D( mouse_x, mouse_y ) ));
+						if ( dist < minDistance ) {
+							minDistance = dist;
+							closerStroke = s;
+						}
+					}
+					if( closerStroke != null) {
+						selectedStrokes.add(closerStroke);
+					}
 				}
 				break;
 			case SimpleDraw.MODE_MOVE_SELECTION :
