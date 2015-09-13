@@ -93,6 +93,14 @@ class Stroke {
 	public void draw( GraphicsWrapper gw ) {
 		gw.drawPolyline( points );
 	}
+
+	// Flip the stroke in the 'rect' area
+	public void flip( AlignedRectangle2D rect ) {
+		for( Point2D p : points ) {
+			p.copy( rect.getMin().x() + rect.getMax().x() - p.x(), p.y() );
+		}
+		markBoundingRectangleDirty();
+	}
 }
 
 
@@ -192,6 +200,24 @@ class MyCanvas extends JPanel implements MouseListener, MouseMotionListener {
 	}
 	public void frameDrawing() {
 		gw.frame( drawing.getBoundingRectangle(), true );
+	}
+	public void flipSelection() {
+		if(selectedStrokes.size() > 0) {
+			ArrayList< Stroke > newSelectedStrokes = new ArrayList< Stroke >();
+
+			// We try to find a global bounding box
+			AlignedRectangle2D globalBoundingBox = new AlignedRectangle2D();
+			for( Stroke s : selectedStrokes ) {
+				globalBoundingBox.bound( s.getBoundingRectangle() );
+			}
+
+			// Then, we flip each stroke of the selection
+			for( Stroke s : selectedStrokes ) {
+				s.flip( globalBoundingBox );
+			}
+
+			// We then change the list of selected strokes
+		}
 	}
 	public void paintComponent( Graphics g ) {
 		super.paintComponent( g );
@@ -402,6 +428,7 @@ public class SimpleDraw implements ActionListener {
 
 	JButton deleteButton;
 	JButton frameButton;
+	JButton flipButton;
 
 	public void setCurrentMode( int mode ) {
 		currentMode = mode;
@@ -454,6 +481,10 @@ public class SimpleDraw implements ActionListener {
 		}
 		else if ( source == frameButton ) {
 			canvas.frameDrawing();
+			canvas.repaint();
+		}
+		else if ( source == flipButton ) {
+			canvas.flipSelection();
 			canvas.repaint();
 		}
 		else {
@@ -539,6 +570,11 @@ public class SimpleDraw implements ActionListener {
 		frameButton.setAlignmentX( Component.LEFT_ALIGNMENT );
 		frameButton.addActionListener(this);
 		toolPanel.add( frameButton );
+
+		flipButton = new JButton( "Flip Selection" );
+		flipButton.setAlignmentX( Component.LEFT_ALIGNMENT );
+		flipButton.addActionListener(this);
+		toolPanel.add( flipButton );
 
 		frame.pack();
 		frame.setVisible( true );
